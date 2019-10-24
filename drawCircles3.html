@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<!--
+  Inspired by, but not matched with @MiniGirlGeek's beautifully hand-drawn creations
+	Third attempt at this - start with big circles then reduces
+	- Twitter @RaspPieman October 2019
+-->
+
+<canvas id="myCanvas" width="800" height="600" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+// Prepare drawing surface
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+// Set colours and other global variables
+var offWhite = '#feffff'; // nearly white (the 'red' part = 254)
+var offBlack = '#010000'; // nearly black (the 'red' part = 1)
+var w = 1; // width of circle line
+var iter = 0;
+var circles = 0;
+
+// Create some fixed shapes which should not be overlapped by circles
+// Draw a couple rectangles 
+ctx.fillStyle = offWhite;
+ctx.fillRect(120, 120, 250, 250);
+ctx.fillRect(500, 400, 50, 60);
+
+// Draw a triangle
+ctx.fillStyle = offWhite;
+ctx.beginPath();
+ctx.moveTo(500, 150);
+ctx.lineTo(700, 100);
+ctx.lineTo(700, 250);
+ctx.closePath(); 
+ctx.fill();
+
+// Now wait for button to be pressed
+
+function drawCircles(n, r) {
+  // Disable button
+  document.getElementById("myBtn").disabled = true; 
+  // Create n circles in random positions
+  for (var i=0; i<n; i++) {
+    x = Math.floor(Math.random() * 800); 
+    y = Math.floor(Math.random() * 600); 
+    // prevent circles getting too small
+    if (r < 5) r = 3;
+    
+    // Only draw a circle if there is sapce for it and do not overlay fixed shaoes
+    if (isRoomFor(x,y,r)) {
+	  drawCircle(x,y,r);
+    }
+  }
+  // Update debugging info
+  iter = iter + 1;
+  document.getElementById("ic").value = circles;
+  document.getElementById("it").value = iter;
+  document.getElementById("ir").value = r; 
+
+  // Re-enable button 
+  document.getElementById("myBtn").disabled = false; 
+  // Call function again in half a second, with slightly smaller radius
+  setTimeout(function(){ drawCircles(50, r-0.3); }, 500);
+}
+
+function drawCircle(x,y,r) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, 2 * Math.PI, false);
+  ctx.fillStyle = offWhite;
+  ctx.fill();
+  ctx.lineWidth = w;
+  ctx.strokeStyle = offBlack;
+  ctx.stroke();
+  circles += 1;
+}
+
+function getColor(x,y) {
+  // return just the 'red' part of the color data from pixel at x,y
+  var imgData = ctx.getImageData(x, y, 1, 1);
+  return(imgData.data[0]);
+}
+
+function isRoomFor(x,y,z) {
+  // this will return false if it detects a pixel with its 'red' component not = 0 
+  var r = z + w; // try to stop overlapping circles
+  var c;
+  var i;
+  // check centre of planned circle
+  if (c = getColor(x,y) != 0) return(false);
+  // try North of centre
+  for (i=1; i<=r; i++) {
+    c = getColor(x, y-i);
+    if (c != 0) return(false);
+  }
+  // try East of centre
+  for (i=1; i<=r; i++) {
+    c = getColor(x-i, y);
+    if (c != 0) return(false);
+  }
+  // try South of centre
+  for (i=1; i<=r; i++) {
+    c = getColor(x, y+i);
+    if (c != 0) return(false);
+  }
+  // try West of centre
+  for (i=1; i<=r; i++) {
+    c = getColor(x-i, y);
+    if (c != 0) return(false);
+  }
+  // try North-East of centre
+  for (i=1; i<=r; i++) {
+    c = getColor(x+i, y-i);
+    if (c != 0) return(false);
+  }
+  // try South-East of centre
+  for (i=1; i<=r; i++) {
+    c = getColor(x+i, y+i);
+    if (c != 0) return(false);
+  }
+  // try South-West of centre
+  for (i=1; i<=r; i++) {
+    c = getColor(x-i, y+i);
+    if (c != 0) return(false);
+  }
+  // try North-West
+  for (i=1; i<=r; i++) {
+    c = getColor(x-i, y-i);
+    if (c != 0) return(false);
+  }
+  return(true);
+}
+
+</script>
+
+<br/>
+iteration: <input id="it" type="text" size="5" value="0">
+radius:    <input id="ir" type="text" size="5" value="0">
+circles:   <input id="ic" type="text" size="5" value="0">
+<button id="myBtn" onclick="drawCircles(50, 15)">Draw circles</button>
+
+</body>
+</html>
